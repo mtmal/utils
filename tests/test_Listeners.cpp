@@ -45,7 +45,9 @@ void signHandler(int)
     run = false;
 }
 
-class MyListener : public IGenericListener<MyDataOne>, public IGenericListener<MyDataTwo>
+class MyListener : public IGenericListener<MyDataOne>, 
+                   public IGenericListener<MyDataTwo>, 
+                   public IGenericListener<MyDataOne, MyDataTwo>
 {
 public:
     virtual void update(const MyDataOne& data) const
@@ -55,6 +57,10 @@ public:
     virtual void update(const MyDataTwo& data) const
     {
         printf("Received data two: %d, %d \n", data.mOne, data.mTwo);
+    }
+    virtual void update(const MyDataOne& data1, const MyDataTwo& data2) const
+    {
+        printf("Received data three: %d, %f, %d, %d \n", data1.mOne, data1.mTwo, data2.mOne, data2.mTwo);
     }
 };
 
@@ -104,24 +110,55 @@ private:
     MyDataTwo mMyDataTwo;
 };
 
+class MyTalkerThree : public GenericTalker<MyDataOne, MyDataTwo>
+{
+public:
+    MyTalkerThree() : GenericTalker<MyDataOne, MyDataTwo>() {};
+    
+    void generateData()
+    {
+        mMyDataOne.mOne = rand();
+        mMyDataOne.mTwo = drand48();
+        mMyDataTwo.mOne = rand();
+        mMyDataTwo.mTwo = rand();
+
+        printf("Broadcasting data three: %d, %f, %d, %d \n", mMyDataOne.mOne, mMyDataOne.mTwo, mMyDataTwo.mOne, mMyDataTwo.mTwo);
+        notifyListeners(mMyDataOne, mMyDataTwo);
+    }
+
+    virtual int registerListener(const IGenericListener<MyDataOne, MyDataTwo>& listener)
+    {
+        puts("Registering listener in talker three");
+        return GenericTalker<MyDataOne, MyDataTwo>::registerListener(listener);
+    }
+
+private:
+    MyDataOne mMyDataOne;
+    MyDataTwo mMyDataTwo;
+};
+
 int main()
 {
     MyListener listener;
     MyTalkerOne talkerOne;
     MyTalkerTwo talkerTwo;
+    MyTalkerThree talkerThree;
     int idOne = talkerOne.registerListener(listener);
     int idTwo = talkerTwo.registerListener(listener);
+    int idThree = talkerThree.registerListener(listener);
     signal(SIGINT, signHandler);
 
     while (run)
     {
         talkerOne.generateData();
         talkerTwo.generateData();
+        talkerThree.generateData();
         sleep(1);
     }
 
     talkerOne.unregisterListener(idOne);
     talkerTwo.unregisterListener(idTwo);
+    talkerThree.unregisterListener(idThree);
 
     puts("Finished");
 

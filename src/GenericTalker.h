@@ -23,7 +23,7 @@
 #ifndef GENERIC_TALKER_H_
 #define GENERIC_TALKER_H_
 
-#include <map>
+#include <unordered_map>
 #include "IGenericListener.h"
 #include "ScopedLock.h"
 
@@ -31,7 +31,7 @@
  * Class implementation of a generic talker class. Handy to broadcast data 
  * to multiple listeners that can ad hoc register or unregister.
  */
-template<typename T>
+template<typename... Args>
 class GenericTalker
 {
 public:
@@ -52,15 +52,20 @@ public:
     }
 
     /**
-     * Registers a listener and returns a random ID.
+     * Registers a listener and returns a random ID. It checks if generated keey already exists,
+     * but there is no boundry in the number of tries.
      *  @param listener a listener which should be notified by the talker.
      *  @return id at which the listener was inserted into a map. It is needed for unregistration.
      */
-    virtual int registerListener(const IGenericListener<T>& listener)
+    virtual int registerListener(const IGenericListener<Args...>& listener)
     {
-        int id = rand();
+        int id;
         ScopedLock lock(mLock);
-        mListerers.insert(std::pair<int, const IGenericListener<T>& >(id, listener));
+        do
+        {
+            id = rand();
+        } while(mListeners.find(id) != mListeners.end());
+        mListeners.insert(std::pair<int, const IGenericListener<Args...>& >(id, listener));
         return id;
     }
 
@@ -71,7 +76,7 @@ public:
     virtual void unregisterListener(const int id)
     {
         ScopedLock lock(mLock);
-        mListerers.erase(mListerers.find(id));
+        mListeners.erase(mListeners.find(id));
     }
 
 protected:
@@ -79,18 +84,18 @@ protected:
      * Notifies all listeners with a new data.
      *  @param data new data to broadcast to listeners.
      */
-    virtual void notifyListeners(const T& data) const
+    virtual void notifyListeners(const Args&... data) const
     {
         ScopedLock lock(mLock);
-        for (const std::pair<int, const IGenericListener<T>& >& listener : mListerers)
+        for (const std::pair<int, const IGenericListener<Args...>& >& listener : mListeners)
         {
-            listener.second.update(data);
+            listener.second.update(data...);
         }
     }
 
 private:
 	/** The list of listeners registered to the talker class. */
-	std::map<int, const IGenericListener<T>& > mListerers;
+	std::unordered_map<int, const IGenericListener<Args...>& > mListeners;
 	/** Lock for accessing the listeners map. */
 	mutable pthread_mutex_t mLock;
 };

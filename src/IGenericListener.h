@@ -26,15 +26,15 @@
 /**
  * An interface of a generic listener class. 
  */
-template<typename T>
+template<typename... Args>
 class IGenericListener
 {
 public:
     /**
-     * Callback method to receive updated T.
-     *  @param T a new data broadcasted by a talker.
+     * Callback method to receive updated Args.
+     *  @param args a new data broadcasted by a talker.
      */
-    virtual void update(const T&) const = 0;
+    virtual void update(const Args&... args) const = 0;
 };
 
 #endif /* IGENERIC_LISTENER_H_ */

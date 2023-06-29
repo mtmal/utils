@@ -126,9 +126,9 @@ public:
         notifyListeners(mMyDataOne, mMyDataTwo);
     }
 
-    virtual int registerListener(const IGenericListener<MyDataOne, MyDataTwo>& listener)
+    int registerListener(const IGenericListener<MyDataOne, MyDataTwo>& listener, const char* test)
     {
-        puts("Registering listener in talker three");
+        printf("Registering listener in talker three with a different signature: %s \n", test);
         return GenericTalker<MyDataOne, MyDataTwo>::registerListener(listener);
     }
 
@@ -145,7 +145,7 @@ int main()
     MyTalkerThree talkerThree;
     int idOne = talkerOne.registerListener(listener);
     int idTwo = talkerTwo.registerListener(listener);
-    int idThree = talkerThree.registerListener(listener);
+    int idThree = talkerThree.registerListener(listener, "test");
     signal(SIGINT, signHandler);
 
     while (run)

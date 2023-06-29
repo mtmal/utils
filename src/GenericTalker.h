@@ -57,7 +57,7 @@ public:
      *  @param listener a listener which should be notified by the talker.
      *  @return id at which the listener was inserted into a map. It is needed for unregistration.
      */
-    virtual int registerListener(const IGenericListener<Args...>& listener)
+    int registerListener(const IGenericListener<Args...>& listener)
     {
         int id;
         ScopedLock lock(mLock);
@@ -73,7 +73,7 @@ public:
      * Unregisters a listener.
      *  @param id the ID at which listener was registered.
      */
-    virtual void unregisterListener(const int id)
+    void unregisterListener(const int id)
     {
         ScopedLock lock(mLock);
         mListeners.erase(mListeners.find(id));
@@ -84,7 +84,7 @@ protected:
      * Notifies all listeners with a new data.
      *  @param data new data to broadcast to listeners.
      */
-    virtual void notifyListeners(const Args&... data) const
+    void notifyListeners(const Args&... data) const
     {
         ScopedLock lock(mLock);
         for (const std::pair<int, const IGenericListener<Args...>& >& listener : mListeners)

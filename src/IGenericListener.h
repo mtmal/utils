@@ -34,7 +34,7 @@ public:
      * Callback method to receive updated Args.
      *  @param args a new data broadcasted by a talker.
      */
-    virtual void update(const Args&... args) const = 0;
+    virtual void update(Args... args) const = 0;
 };
 
 #endif /* IGENERIC_LISTENER_H_ */

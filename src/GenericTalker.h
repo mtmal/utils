@@ -84,7 +84,7 @@ protected:
      * Notifies all listeners with a new data.
      *  @param data new data to broadcast to listeners.
      */
-    void notifyListeners(const Args&... data) const
+    void notifyListeners(Args... data) const
     {
         ScopedLock lock(mLock);
         for (const std::pair<int, const IGenericListener<Args...>& >& listener : mListeners)

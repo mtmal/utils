@@ -45,29 +45,29 @@ void signHandler(int)
     run = false;
 }
 
-class MyListener : public IGenericListener<const MyDataOne&>, 
-                   public IGenericListener<const MyDataTwo&>, 
-                   public IGenericListener<const MyDataOne&, const MyDataTwo&>
+class MyListener : public IGenericListener<MyDataOne>, 
+                   public IGenericListener<MyDataTwo>, 
+                   public IGenericListener<MyDataOne, MyDataTwo>
 {
 public:
-    virtual void update(const MyDataOne& data) const
+    void update(const MyDataOne& data)
     {
         printf("Received data one: %d, %f \n", data.mOne, data.mTwo);
     }
-    virtual void update(const MyDataTwo& data) const
+    void update(const MyDataTwo& data)
     {
         printf("Received data two: %d, %d \n", data.mOne, data.mTwo);
     }
-    virtual void update(const MyDataOne& data1, const MyDataTwo& data2) const
+    void update(const MyDataOne& data1, const MyDataTwo& data2)
     {
         printf("Received data three: %d, %f, %d, %d \n", data1.mOne, data1.mTwo, data2.mOne, data2.mTwo);
     }
 };
 
-class MyTalkerOne : public GenericTalker<const MyDataOne&>
+class MyTalkerOne : public GenericTalker<MyDataOne>
 {
 public:
-    MyTalkerOne() : GenericTalker<const MyDataOne&>() {};
+    MyTalkerOne() : GenericTalker<MyDataOne>(){};
 
     void generateData()
     {
@@ -78,20 +78,20 @@ public:
         notifyListeners(mMyDataOne);
     }
 
-    virtual int registerListener(const IGenericListener<const MyDataOne&>& listener)
+    int registerListener(IGenericListener<MyDataOne>& listener)
     {
         puts("Registering listener in talker one");
-        return GenericTalker<const MyDataOne&>::registerListener(listener);
+        return GenericTalker<MyDataOne>::registerListener(listener);
     }
 private:
     MyDataOne mMyDataOne;
 };
 
-class MyTalkerTwo : public GenericTalker<const MyDataTwo&>
+class MyTalkerTwo : public GenericTalker<MyDataTwo>
 {
 public:
-    MyTalkerTwo() : GenericTalker<const MyDataTwo&>() {};
-    
+    MyTalkerTwo() : GenericTalker<MyDataTwo>(){};
+
     void generateData()
     {
         mMyDataTwo.mOne = rand();
@@ -101,20 +101,20 @@ public:
         notifyListeners(mMyDataTwo);
     }
 
-    virtual int registerListener(const IGenericListener<const MyDataTwo&>& listener)
+    int registerListener(IGenericListener<MyDataTwo>& listener)
     {
         puts("Registering listener in talker two");
-        return GenericTalker<const MyDataTwo&>::registerListener(listener);
+        return GenericTalker<MyDataTwo>::registerListener(listener);
     }
 private:
     MyDataTwo mMyDataTwo;
 };
 
-class MyTalkerThree : public GenericTalker<const MyDataOne&, const MyDataTwo&>
+class MyTalkerThree : public GenericTalker<MyDataOne, MyDataTwo>
 {
 public:
-    MyTalkerThree() : GenericTalker<const MyDataOne&, const MyDataTwo&>() {};
-    
+    MyTalkerThree() : GenericTalker<MyDataOne, MyDataTwo>(){};
+
     void generateData()
     {
         mMyDataOne.mOne = rand();
@@ -126,10 +126,10 @@ public:
         notifyListeners(mMyDataOne, mMyDataTwo);
     }
 
-    int registerListener(const IGenericListener<const MyDataOne&, const MyDataTwo&>& listener, const char* test)
+    int registerListener(IGenericListener<MyDataOne, MyDataTwo>& listener, const char* test)
     {
         printf("Registering listener in talker three with a different signature: %s \n", test);
-        return GenericTalker<const MyDataOne&, const MyDataTwo&>::registerListener(listener);
+        return GenericTalker<MyDataOne, MyDataTwo>::registerListener(listener);
     }
 
 private:

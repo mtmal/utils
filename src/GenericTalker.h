@@ -57,7 +57,7 @@ public:
      *  @param listener a listener which should be notified by the talker.
      *  @return id at which the listener was inserted into a map. It is needed for unregistration.
      */
-    int registerListener(const IGenericListener<Args...>& listener)
+    int registerListener(IGenericListener<Args...>& listener)
     {
         int id;
         ScopedLock lock(mLock);
@@ -65,7 +65,7 @@ public:
         {
             id = rand();
         } while(mListeners.find(id) != mListeners.end());
-        mListeners.insert(std::pair<int, const IGenericListener<Args...>& >(id, listener));
+        mListeners.insert(std::pair<int, IGenericListener<Args...>& >(id, listener));
         return id;
     }
 
@@ -84,10 +84,10 @@ protected:
      * Notifies all listeners with a new data.
      *  @param data new data to broadcast to listeners.
      */
-    void notifyListeners(Args... data) const
+    void notifyListeners(const Args&... data) const
     {
         ScopedLock lock(mLock);
-        for (const std::pair<int, const IGenericListener<Args...>& >& listener : mListeners)
+        for (const std::pair<int, IGenericListener<Args...>& >& listener : mListeners)
         {
             listener.second.update(data...);
         }
@@ -95,7 +95,7 @@ protected:
 
 private:
 	/** The list of listeners registered to the talker class. */
-	std::unordered_map<int, const IGenericListener<Args...>& > mListeners;
+	std::unordered_map<int, IGenericListener<Args...>& > mListeners;
 	/** Lock for accessing the listeners map. */
 	mutable pthread_mutex_t mLock;
 };

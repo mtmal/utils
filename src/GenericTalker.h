@@ -23,6 +23,7 @@
 #ifndef GENERIC_TALKER_H_
 #define GENERIC_TALKER_H_
 
+#include <atomic>
 #include <unordered_map>
 #include "IGenericListener.h"
 #include "ScopedLock.h"
@@ -38,7 +39,7 @@ public:
     /**
      * Basic constructor that initialises a lock.
      */
-    GenericTalker()
+    GenericTalker() : mTalk(true)
     {
         pthread_mutex_init(&mLock, nullptr);
     }
@@ -79,6 +80,41 @@ public:
         mListeners.erase(mListeners.find(id));
     }
 
+    /**
+     * Tests if an id is already registered.
+     *  @param id an ID to test.
+     *  @return true if the @p id is in the map.
+     */
+    bool testId(const int id) const
+    {
+        ScopedLock lock(mLock);
+        return (mListeners.find(id) != mListeners.end());
+    }
+
+    /**
+     * Pauses the talker from broadcasting updates.
+     */
+    inline void pause()
+    {
+        mTalk = false;
+    }
+
+    /**
+     * Resumes the talker to broadcast updates.
+     */
+    inline void resume()
+    {
+        mTalk = true;
+    }
+
+    /**
+     *  @return true if the talker is broadcasting updates.
+     */
+    inline bool isTalking() const
+    {
+        return mTalk.load(std::memory_order_relaxed);
+    }
+
 protected:
     /**
      * Notifies all listeners with a new data.
@@ -86,14 +122,19 @@ protected:
      */
     void notifyListeners(const Args&... data) const
     {
-        ScopedLock lock(mLock);
-        for (const std::pair<int, IGenericListener<Args...>& >& listener : mListeners)
+        if (isTalking())
         {
-            listener.second.update(data...);
+            ScopedLock lock(mLock);
+            for (const std::pair<int, IGenericListener<Args...>& >& listener : mListeners)
+            {
+                listener.second.update(data...);
+            }
         }
     }
 
 private:
+    /** Flag indicating if the talker is should broadcast updates or not. */
+    std::atomic<bool> mTalk;
 	/** The list of listeners registered to the talker class. */
 	std::unordered_map<int, IGenericListener<Args...>& > mListeners;
 	/** Lock for accessing the listeners map. */

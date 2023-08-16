@@ -20,20 +20,22 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef GENERIC_TALKER_H_
-#define GENERIC_TALKER_H_
+#pragma once
 
 #include <atomic>
-#include <unordered_map>
-#include "IGenericListener.h"
+#include "RegistrationBase.h"
 #include "ScopedLock.h"
+
+
+template<typename... Args>
+class GenericListener;
 
 /**
  * Class implementation of a generic talker class. Handy to broadcast data 
  * to multiple listeners that can ad hoc register or unregister.
  */
 template<typename... Args>
-class GenericTalker
+class GenericTalker : public RegistrationBase<GenericTalker<Args...>, GenericListener<Args...>>
 {
 public:
     /**
@@ -41,54 +43,6 @@ public:
      */
     GenericTalker() : mTalk(true)
     {
-        pthread_mutex_init(&mLock, nullptr);
-    }
-
-    /**
-     * Basic destructor that destroys the lock.
-     */
-    virtual ~GenericTalker()
-    {
-        pthread_mutex_destroy(&mLock);
-    }
-
-    /**
-     * Registers a listener and returns a random ID. It checks if generated keey already exists,
-     * but there is no boundry in the number of tries.
-     *  @param listener a listener which should be notified by the talker.
-     *  @return id at which the listener was inserted into a map. It is needed for unregistration.
-     */
-    int registerListener(IGenericListener<Args...>& listener)
-    {
-        int id;
-        ScopedLock lock(mLock);
-        do
-        {
-            id = rand();
-        } while(mListeners.find(id) != mListeners.end());
-        mListeners.insert(std::pair<int, IGenericListener<Args...>& >(id, listener));
-        return id;
-    }
-
-    /**
-     * Unregisters a listener.
-     *  @param id the ID at which listener was registered.
-     */
-    void unregisterListener(const int id)
-    {
-        ScopedLock lock(mLock);
-        mListeners.erase(mListeners.find(id));
-    }
-
-    /**
-     * Tests if an id is already registered.
-     *  @param id an ID to test.
-     *  @return true if the @p id is in the map.
-     */
-    bool testId(const int id) const
-    {
-        ScopedLock lock(mLock);
-        return (mListeners.find(id) != mListeners.end());
     }
 
     /**
@@ -124,10 +78,10 @@ protected:
     {
         if (isTalking())
         {
-            ScopedLock lock(mLock);
-            for (const std::pair<int, IGenericListener<Args...>& >& listener : mListeners)
+            ScopedLock lock(this->mLock);
+            for (GenericListener<Args...>* listener : this->mItems)
             {
-                listener.second.update(data...);
+                listener->update(data...);
             }
         }
     }
@@ -135,10 +89,4 @@ protected:
 private:
     /** Flag indicating if the talker is should broadcast updates or not. */
     std::atomic<bool> mTalk;
-	/** The list of listeners registered to the talker class. */
-	std::unordered_map<int, IGenericListener<Args...>& > mListeners;
-	/** Lock for accessing the listeners map. */
-	mutable pthread_mutex_t mLock;
 };
-
-#endif /* GENERIC_TALKER_H_ */

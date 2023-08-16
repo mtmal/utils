@@ -20,14 +20,19 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef IGENERIC_LISTENER_H_
-#define IGENERIC_LISTENER_H_
+#pragma once
+
+#include "RegistrationBase.h"
+
+
+template<typename... Args>
+class GenericTalker;
 
 /**
- * An interface of a generic listener class. 
+ * An abstract class implementation of a generic listener interface. 
  */
 template<typename... Args>
-class IGenericListener
+class GenericListener : public RegistrationBase<GenericListener<Args...>, GenericTalker<Args...>>
 {
 public:
     /**
@@ -36,5 +41,3 @@ public:
      */
     virtual void update(const Args&... args) = 0;
 };
-
-#endif /* IGENERIC_LISTENER_H_ */

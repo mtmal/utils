@@ -21,8 +21,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <atomic>
+#include <cstdio>
 #include <signal.h>
 #include <unistd.h>
+#include <GenericListener.h>
 #include <GenericTalker.h>
 
 
@@ -45,20 +47,20 @@ void signHandler(int)
     run = false;
 }
 
-class MyListener : public IGenericListener<MyDataOne>, 
-                   public IGenericListener<MyDataTwo>, 
-                   public IGenericListener<MyDataOne, MyDataTwo>
+class MyListener : public GenericListener<MyDataOne>, 
+                   public GenericListener<MyDataTwo>, 
+                   public GenericListener<MyDataOne, MyDataTwo>
 {
 public:
-    void update(const MyDataOne& data)
+    void update(const MyDataOne& data) override
     {
         printf("Received data one: %d, %f \n", data.mOne, data.mTwo);
     }
-    void update(const MyDataTwo& data)
+    void update(const MyDataTwo& data) override
     {
         printf("Received data two: %d, %d \n", data.mOne, data.mTwo);
     }
-    void update(const MyDataOne& data1, const MyDataTwo& data2)
+    void update(const MyDataOne& data1, const MyDataTwo& data2) override
     {
         printf("Received data three: %d, %f, %d, %d \n", data1.mOne, data1.mTwo, data2.mOne, data2.mTwo);
     }
@@ -78,10 +80,10 @@ public:
         notifyListeners(mMyDataOne);
     }
 
-    int registerListener(IGenericListener<MyDataOne>& listener)
+    void registerTo(GenericListener<MyDataOne>* listener)
     {
         puts("Registering listener in talker one");
-        return GenericTalker<MyDataOne>::registerListener(listener);
+        GenericTalker<MyDataOne>::registerTo(listener);
     }
 private:
     MyDataOne mMyDataOne;
@@ -101,10 +103,10 @@ public:
         notifyListeners(mMyDataTwo);
     }
 
-    int registerListener(IGenericListener<MyDataTwo>& listener)
+    void registerTo(GenericListener<MyDataTwo>* listener)
     {
         puts("Registering listener in talker two");
-        return GenericTalker<MyDataTwo>::registerListener(listener);
+        GenericTalker<MyDataTwo>::registerTo(listener);
     }
 private:
     MyDataTwo mMyDataTwo;
@@ -126,10 +128,10 @@ public:
         notifyListeners(mMyDataOne, mMyDataTwo);
     }
 
-    int registerListener(IGenericListener<MyDataOne, MyDataTwo>& listener, const char* test)
+    void registerTo(GenericListener<MyDataOne, MyDataTwo>* listener, const char* test)
     {
         printf("Registering listener in talker three with a different signature: %s \n", test);
-        return GenericTalker<MyDataOne, MyDataTwo>::registerListener(listener);
+        GenericTalker<MyDataOne, MyDataTwo>::registerTo(listener);
     }
 
 private:
@@ -143,9 +145,9 @@ int main()
     MyTalkerOne talkerOne;
     MyTalkerTwo talkerTwo;
     MyTalkerThree talkerThree;
-    int idOne = talkerOne.registerListener(listener);
-    int idTwo = talkerTwo.registerListener(listener);
-    int idThree = talkerThree.registerListener(listener, "test");
+    talkerOne.registerTo(&listener);
+    talkerTwo.registerTo(&listener);
+    talkerThree.registerTo(&listener, "test");
     signal(SIGINT, signHandler);
 
     while (run)
@@ -156,9 +158,11 @@ int main()
         sleep(1);
     }
 
-    talkerOne.unregisterListener(idOne);
-    talkerTwo.unregisterListener(idTwo);
-    talkerThree.unregisterListener(idThree);
+    // example of unregistering from the other way round. Static casts needed as listener
+    // inherits from multiple GenericListeners so it needs to be explicit.
+    static_cast<GenericListener<MyDataOne>*>(&listener)->unregisterFrom(&talkerOne);
+    static_cast<GenericListener<MyDataTwo>*>(&listener)->unregisterFrom(&talkerTwo);
+    static_cast<GenericListener<MyDataOne, MyDataTwo>*>(&listener)->unregisterFrom(&talkerThree);
 
     puts("Finished");
 

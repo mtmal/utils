@@ -49,6 +49,7 @@ public:
         pthread_mutex_init(&mLock, &attr);
     }
 
+
     /**
      * Restructor that unregisters all RegisterTo instances from itself.
      */

@@ -20,8 +20,7 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef SCOPED_LOCK_H_
-#define SCOPED_LOCK_H_
+#pragma once
 
 #include <pthread.h>
 
@@ -38,9 +37,8 @@ public:
      * Basic destructor, unlocks the mutex.
      */
 	virtual ~ScopedLock();
+
 private:
     /** Reference to mutex that will be locked by this class. */
 	pthread_mutex_t& mLock;
 };
-
-#endif /* SCOPED_LOCK_H_ */

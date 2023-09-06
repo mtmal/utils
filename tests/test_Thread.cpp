@@ -37,7 +37,7 @@ public:
         printf("My name: %s, local counter: %d, global counter: %d \n", mName.c_str(), mCounter, globalCounter.load(std::memory_order_relaxed));
     }
 
-    void* theadBody()
+    void* threadBody()
     {
         while (mCounter < mMaxIter)
         {

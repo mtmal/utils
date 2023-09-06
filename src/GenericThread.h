@@ -95,13 +95,13 @@ protected:
 
 private:
     /**
-     * Starts the thread. @p instance needs to implement theadBody function.
+     * Starts the thread. @p instance needs to implement threadBody function.
      *  @param instance an instance of the derived class.
      *  @return thread return values.
      */
     static void* startThread(void* instance)
     {
-        return static_cast<Derived*>(instance)->theadBody();
+        return static_cast<Derived*>(instance)->threadBody();
     }
 
     /** Pthread related to this class. */

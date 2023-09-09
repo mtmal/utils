@@ -50,7 +50,7 @@ public:
      */
     inline void pause()
     {
-        mTalk = false;
+        mTalk.store(false, std::memory_order_release);
     }
 
     /**
@@ -58,7 +58,7 @@ public:
      */
     inline void resume()
     {
-        mTalk = true;
+        mTalk.store(true, std::memory_order_release);
     }
 
     /**
@@ -66,7 +66,7 @@ public:
      */
     inline bool isTalking() const
     {
-        return mTalk.load(std::memory_order_relaxed);
+        return mTalk.load(std::memory_order_acquire);
     }
 
 protected:

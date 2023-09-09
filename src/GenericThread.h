@@ -37,7 +37,7 @@ public:
     {
         pthread_mutex_init(&mMutex, nullptr);
         sem_init(&mSemaphore, 0, 0);
-        mRun.store(false, std::memory_order_relaxed);
+        mRun.store(false, std::memory_order_release);
     }
 
     /**
@@ -67,7 +67,7 @@ public:
      */
     void stopThread(const bool force = false, void* threadReturn = nullptr)
     {
-        mRun.store(false, std::memory_order_relaxed);
+        mRun.store(false, std::memory_order_release);
         if (mThread > 0)
         {
             if (force)

@@ -24,7 +24,7 @@
 
 #include <algorithm>
 #include <vector>
-#include "ScopedLock.h"
+#include "scoped_lock.h"
 
 
 /**
@@ -96,8 +96,8 @@ public:
     }
 
 protected:
-	/** The list of items registered to this class. */
+    /** The list of items registered to this class. */
     std::vector<RegisterTo*> mItems;
-	/** Lock for accessing the list of items. */
-	mutable pthread_mutex_t mLock;
+    /** Lock for accessing the list of items. */
+    mutable pthread_mutex_t mLock;
 };

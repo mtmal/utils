@@ -24,8 +24,8 @@
 #include <cstdio>
 #include <signal.h>
 #include <unistd.h>
-#include <GenericListener.h>
-#include <GenericTalker.h>
+#include <generic_listener.h>
+#include <generic_talker.h>
 
 
 std::atomic<bool> run(true);

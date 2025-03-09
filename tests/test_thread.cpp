@@ -20,14 +20,45 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "ScopedLock.h"
+#include <cstdio>
+#include <string>
+#include <unistd.h>
+#include <generic_thread.h>
 
-ScopedLock::ScopedLock(pthread_mutex_t& lock) : mLock(lock)
-{
-    pthread_mutex_lock(&mLock);
-}
+static std::atomic<int> globalCounter = 0;
 
-ScopedLock::~ScopedLock()
+class Counter : public GenericThread<Counter>
 {
-    pthread_mutex_unlock(&mLock);
+public:
+    Counter(const int maxIter, const std::string& name) : GenericThread<Counter>(), mMaxIter(maxIter), mCounter(0), mName(name) {}
+
+    virtual ~Counter()
+    {
+        printf("My name: %s, local counter: %d, global counter: %d \n", mName.c_str(), mCounter, globalCounter.load(std::memory_order_relaxed));
+    }
+
+    void* threadBody()
+    {
+        while (mCounter < mMaxIter)
+        {
+            ++mCounter;
+            globalCounter.fetch_add(1);
+        }
+        return nullptr;
+    }
+
+private:
+    int mMaxIter;
+    int mCounter;
+    std::string mName;
+};
+
+int main()
+{
+    Counter c1(10, "C1");
+    Counter c2(40, "C2");
+    c1.startThread();
+    c2.startThread();
+    sleep(1);
+    return 0;
 }

@@ -23,8 +23,8 @@
 #pragma once
 
 #include <atomic>
-#include "RegistrationBase.h"
-#include "ScopedLock.h"
+#include "registration_base.h"
+#include "scoped_lock.h"
 
 
 template<typename... Args>

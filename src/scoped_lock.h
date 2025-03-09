@@ -20,45 +20,31 @@
 // SOFTWARE.
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <string>
-#include <unistd.h>
-#include <GenericThread.h>
+#pragma once
 
-std::atomic<int> globalCounter = 0;
+#include <pthread.h>
 
-class Counter : public GenericThread<Counter>
+class ScopedLock
 {
 public:
-    Counter(const int maxIter, const std::string& name) : GenericThread<Counter>(), mMaxIter(maxIter), mCounter(0), mName(name) {}
-
-    virtual ~Counter()
+    /**
+     * Basic constructor, takes reference to a mutex and locks it.
+     *  @param lock a reference to a mutex.
+     */
+    explicit ScopedLock(pthread_mutex_t& lock) : mLock(lock)
     {
-        printf("My name: %s, local counter: %d, global counter: %d \n", mName.c_str(), mCounter, globalCounter.load(std::memory_order_relaxed));
-    }
+        pthread_mutex_lock(&mLock);
+    };
 
-    void* threadBody()
+    /**
+     * Basic destructor, unlocks the mutex.
+     */
+    virtual ~ScopedLock()
     {
-        while (mCounter < mMaxIter)
-        {
-            ++mCounter;
-            globalCounter.fetch_add(1);
-        }
-        return nullptr;
-    }
+        pthread_mutex_unlock(&mLock);
+    };
 
 private:
-    int mMaxIter;
-    int mCounter;
-    std::string mName;
+    /** Reference to mutex that will be locked by this class. */
+    pthread_mutex_t& mLock;
 };
-
-int main()
-{
-    Counter c1 = Counter(10, "C1");
-    Counter c2 = Counter(40, "C2");
-    c1.startThread();
-    c2.startThread();
-    sleep(1);
-    return 0;
-}

@@ -22,23 +22,22 @@
 
 #pragma once
 
-#include <pthread.h>
+#include "registration_base.h"
 
-class ScopedLock
+
+template<typename... Args>
+class GenericTalker;
+
+/**
+ * An abstract class implementation of a generic listener interface. 
+ */
+template<typename... Args>
+class GenericListener : public RegistrationBase<GenericListener<Args...>, GenericTalker<Args...>>
 {
 public:
     /**
-     * Basic constructor, takes reference to a mutex and locks it.
-     *  @param lock a reference to a mutex.
+     * Callback method to receive updated Args.
+     *  @param args a new data broadcasted by a talker.
      */
-	explicit ScopedLock(pthread_mutex_t& lock);
-
-    /**
-     * Basic destructor, unlocks the mutex.
-     */
-	virtual ~ScopedLock();
-
-private:
-    /** Reference to mutex that will be locked by this class. */
-	pthread_mutex_t& mLock;
+    virtual void update(const Args&... args) = 0;
 };
